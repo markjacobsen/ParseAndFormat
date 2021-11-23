@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.cffreedom.exceptions.FileSystemException;
@@ -23,6 +24,7 @@ public class OreillyHighlights {
 		String bookTitle = Utils.prompt("Book Title"); // The CSV export sometimes contains all highlights, or highlights from multiple books
 		String outputFile = Utils.prompt("Output file ["+bookTitle+"]");
 		outputFile = Utils.isNull(outputFile, bookTitle+".html");
+		String fullTitle = bookTitle; // Will be replaced w/ the value read from the CSV
 		bookTitle = bookTitle.toLowerCase();
 		
 		String outputDir = FileUtils.getFileDirectory(file);
@@ -49,18 +51,20 @@ public class OreillyHighlights {
 					String title = lineInFile[titleIndex];
 					if (title.toLowerCase().contains(bookTitle)) {
 						if (outputLines.isEmpty()) {
-							outputLines.add("<h1>"+title+"</h1");
+							fullTitle = title;
 						}
 						String chapter = lineInFile[chapterIndex];
-						String highlight = lineInFile[highlightIndex];
+						String highlight = lineInFile[highlightIndex].replace("\n", "<br>\n");
 						String note = lineInFile[noteIndex];
 						
-						outputLines.add("<p><i style='size:small'>"+chapter+"</i><br>"+highlight+"</p>");
+						outputLines.add("<p><i style='font-size:small;color:grey;'>"+chapter+"</i><br>"+highlight+"</p>");
 						//System.out.println(highlight);
 					}
 				}
 			}
 			
+			Collections.reverse(outputLines); // The OReilly export returns highlights in reverse order so let's fix that
+			outputLines.add(0, "<h1>"+fullTitle+"</h1");
 			FileUtils.writeLinesToFile(fullOutputFile, outputLines);
 			System.out.println("Wrote highlights to: "+fullOutputFile);
 		} catch (IOException e) {
