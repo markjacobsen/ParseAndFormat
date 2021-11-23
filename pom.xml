@@ -3,12 +3,22 @@
 	<groupId>net.markjacobsen</groupId>
 	<artifactId>parse-and-format</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
 	
 	<dependencies>
 		<dependency>
 		    <groupId>com.opencsv</groupId>
 		    <artifactId>opencsv</artifactId>
 		    <version>5.5.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.cffreedom</groupId>
+			<artifactId>cffreedom-utils</artifactId>
+			<version>1.0</version>
 		</dependency>
 	</dependencies>
 </project>
