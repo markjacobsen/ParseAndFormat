@@ -1,6 +1,5 @@
 package net.markjacobsen.parseformat;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +12,12 @@ import com.cffreedom.utils.file.FileUtils;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
+/**
+ * @author MarkJacobsen.net
+ *
+ * Take an exported CSV of highlights from O'Reilly Safari Books Online and
+ * parse out the ones of interest into a readable HTML file
+ */
 public class OreillyHighlights {
 	public static void main(String[] args) {
 		int lineNum = 0;
