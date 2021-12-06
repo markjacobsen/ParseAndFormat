@@ -16,6 +16,7 @@ import com.cffreedom.utils.DateTimeUtils;
 import com.cffreedom.utils.Format;
 import com.cffreedom.utils.JsonUtils;
 import com.cffreedom.utils.SystemUtils;
+import com.cffreedom.utils.Utils;
 import com.cffreedom.utils.file.FileUtils;
 import com.cffreedom.utils.net.HttpUtils;
 
@@ -86,6 +87,14 @@ public class NflFromEspn {
 			 * 						"shortDetail": "2:44 - 3rd"
 			 * 					}
 			 * 				}
+			 * 				"broadcasts": [
+			 * 					{
+			 * 						"market": "national"
+			 * 						"names": [
+			 * 							"CBS"
+			 * 						]
+			 * 					}
+			 * 				]
 			 * 			}
 			 * 		]
 			 */
@@ -107,9 +116,23 @@ public class NflFromEspn {
 					JSONObject statusType = JsonUtils.getJsonObject(status, "type");
 					String timeLeft = JsonUtils.getString(statusType, "shortDetail");
 					
+					String broadcastOn = "";
+					JSONArray broadcasts = JsonUtils.getJsonArray(competition, "broadcasts");
+					for (int b = 0; b < broadcasts.size(); b++) {
+						JSONObject broadcast = (JSONObject)broadcasts.get(b);
+						JSONArray names = JsonUtils.getJsonArray(broadcast, "names");
+						for (int n = 0; n < names.size(); n++) {
+							String name = (String)names.get(n);
+							if (Utils.hasLength(broadcastOn)) {
+								broadcastOn += ", ";
+							}
+							broadcastOn += name;
+						}
+					}
+					
 					Calendar gmt = Convert.toCalendar(JsonUtils.getString(competition, "date"));
 					Calendar local = DateTimeUtils.gmtToLocal(gmt);
-					logger.debug("  "+Format.date(Format.DATE_HUMAN, local)+"       "+timeLeft);
+					logger.debug("  "+Format.date(Format.DATE_HUMAN, local)+" on "+broadcastOn+"       "+timeLeft);
 										
 					JSONArray competitors = JsonUtils.getJsonArray(competition, "competitors");
 					for (int z = 0; z < competitors.size(); z++) {
