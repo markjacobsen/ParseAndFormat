@@ -80,6 +80,12 @@ public class NflFromEspn {
 			 * 						]
 			 * 					}
 			 * 				]
+			 * 				...
+			 * 				"status": {
+			 * 					"type": {
+			 * 						"shortDetail": "2:44 - 3rd"
+			 * 					}
+			 * 				}
 			 * 			}
 			 * 		]
 			 */
@@ -96,9 +102,15 @@ public class NflFromEspn {
 				JSONArray competitions = JsonUtils.getJsonArray(event, "competitions");
 				for (int y = 0; y < competitions.size(); y++) {
 					JSONObject competition = (JSONObject)competitions.get(y);
+					
+					JSONObject status = JsonUtils.getJsonObject(competition, "status");
+					JSONObject statusType = JsonUtils.getJsonObject(status, "type");
+					String timeLeft = JsonUtils.getString(statusType, "shortDetail");
+					
 					Calendar gmt = Convert.toCalendar(JsonUtils.getString(competition, "date"));
 					Calendar local = DateTimeUtils.gmtToLocal(gmt);
-					logger.debug("  "+Format.date(Format.DATE_HUMAN, local));
+					logger.debug("  "+Format.date(Format.DATE_HUMAN, local)+"       "+timeLeft);
+										
 					JSONArray competitors = JsonUtils.getJsonArray(competition, "competitors");
 					for (int z = 0; z < competitors.size(); z++) {
 						JSONObject competitor = (JSONObject)competitors.get(z);
