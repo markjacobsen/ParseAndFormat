@@ -29,10 +29,10 @@ import com.cffreedom.utils.net.HttpUtils;
  */
 public class NflFromEspn {
 	private static final Logger logger = LoggerFactory.getLogger(NflFromEspn.class);
-	private static final String jsonRespFile = SystemUtils.getDirWork() + "\\nfl.json";
+	private static final String jsonRespFile = SystemUtils.getDirWork() + "\\nfl.scores.json";
 	
 	public static void main(String[] args) {
-		//downloadCurrentWeek();
+		downloadCurrentWeek();
 		
 		parseJson();
 		
@@ -52,6 +52,9 @@ public class NflFromEspn {
 	private static void parseJson() {
 		try {
 			/*
+			 * "season": {
+			 * 		"year": 2021
+			 * }
 			 * "week": {
 			 * 		"number": 13,
 			 * 		...
@@ -107,8 +110,17 @@ public class NflFromEspn {
 			 */
 			String jsonResp = FileUtils.getFileContents(jsonRespFile);
 			JSONObject json = JsonUtils.getJsonObject(jsonResp);
+			
+			JSONObject season = JsonUtils.getJsonObject(json, "season");
+			Long yearNumber = JsonUtils.getLong(season, "year");
+			
 			JSONObject jsonWeek = JsonUtils.getJsonObject(json, "week");
-			logger.debug("Week: "+JsonUtils.getLong(jsonWeek, "number"));
+			Long weekNumber = JsonUtils.getLong(jsonWeek, "number");
+			logger.debug("Week: "+weekNumber);
+			
+			String weekFile = SystemUtils.getDirWork() + "\\nfl.scores."+yearNumber+".week."+String.format("%02d", weekNumber)+".json";
+			FileUtils.copyFile(jsonRespFile, weekFile);
+			
 			JSONArray events = JsonUtils.getJsonArray(json, "events");
 			logger.debug("Games this week: "+events.size());
 			for (int x = 0; x < events.size(); x++) {
@@ -174,7 +186,7 @@ public class NflFromEspn {
 				}
 				// END: Game
 			}
-		} catch (ParseException e) {
+		} catch (ParseException | FileSystemException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
