@@ -20,6 +20,13 @@ import com.cffreedom.utils.Utils;
 import com.cffreedom.utils.file.FileUtils;
 import com.cffreedom.utils.net.HttpUtils;
 
+/**
+ * Download and process the JSON response for NFL scores
+ * Found from here: https://gist.github.com/akeaswaran/b48b02f1c94f873c6655e7129910fc3b
+ * 
+ * @author MarkJacobsen.net
+ *
+ */
 public class NflFromEspn {
 	private static final Logger logger = LoggerFactory.getLogger(NflFromEspn.class);
 	private static final String jsonRespFile = SystemUtils.getDirWork() + "\\nfl.json";
