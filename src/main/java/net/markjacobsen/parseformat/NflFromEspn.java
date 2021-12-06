@@ -1,6 +1,8 @@
 package net.markjacobsen.parseformat;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,6 +21,8 @@ import com.cffreedom.utils.SystemUtils;
 import com.cffreedom.utils.Utils;
 import com.cffreedom.utils.file.FileUtils;
 import com.cffreedom.utils.net.HttpUtils;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 
 /**
  * Download and process the JSON response for NFL scores
@@ -32,9 +36,10 @@ public class NflFromEspn {
 	private static final String jsonRespFile = SystemUtils.getDirWork() + "\\nfl.scores.json";
 	
 	public static void main(String[] args) {
-		downloadCurrentWeek();
+		//downloadCurrentWeek();
 		
-		parseJson();
+		//parseJson();
+		parse2();
 		
 		logger.info("done");
 	}
@@ -189,6 +194,29 @@ public class NflFromEspn {
 		} catch (ParseException | FileSystemException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	private static void parse2() {
+		List<String> output = new ArrayList<>();
+		String jsonResp = FileUtils.getFileContents(jsonRespFile);
+		DocumentContext jsonContext = JsonPath.parse(jsonResp);
+		Integer week = jsonContext.read("week.number");
+		List<Object> events = jsonContext.read("events");
+		
+		output.add("Week: "+week);
+		output.add(events.size()+" games");
+		
+		for (int x = 0; x < events.size(); x++) {
+			output.add(jsonContext.read("events["+x+"].shortName"));
+			List<Object> competitions = jsonContext.read("events["+x+"].competitions");
+			for (int y = 0; y < competitions.size(); y++) {
+				
+			}
+		}
+		
+		for (String line : output) {
+			System.out.println(line);
 		}
 	}
 	
