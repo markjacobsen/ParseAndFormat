@@ -153,20 +153,23 @@ public class NflFromEspn {
 						JSONArray records = JsonUtils.getJsonArray(competitor, "records");
 						String recordOverall = "";
 						String recordLocation = "";
+						String location = "";
 						for (int r = 0; r < records.size(); r++) {
 							JSONObject record = (JSONObject)records.get(r);
 							String type = JsonUtils.getString(record, "type");
 							String summary = JsonUtils.getString(record, "summary");
 							if (type.equalsIgnoreCase("total")) {
-								recordOverall = summary;
+								recordOverall = summary+" ("+getWinPct(summary)+")";
 							} else if (type.equalsIgnoreCase("home") && homeAway.equalsIgnoreCase("home")) {
-								recordLocation = summary+" at home";
+								recordLocation = summary+" ("+getWinPct(summary)+")";
+								location = "at home";
 							} else if (type.equalsIgnoreCase("road") && homeAway.equalsIgnoreCase("away")) {
-								recordLocation = summary+" on the road";
+								recordLocation = summary+" ("+getWinPct(summary)+")";
+								location = "on the road";
 							}
 						}
 						String formattedTeamScore = Format.pad("    "+abbrev+": "+score, 22, " ", true);
-						logger.debug(formattedTeamScore+recordOverall+" overall, "+recordLocation);
+						logger.debug(formattedTeamScore+recordOverall+" overall, "+recordLocation+" "+location);
 					}
 				}
 				// END: Game
@@ -175,5 +178,14 @@ public class NflFromEspn {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private static String getWinPct(String record) {
+		String[] wl = record.split("-");
+		double w = Convert.toDouble(wl[0]);
+		double l = Convert.toDouble(wl[1]);
+		double total = w + l;
+		double pct = (w / total) * 100;
+		return Format.number(pct, 0)+"%";
 	}
 }
