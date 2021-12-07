@@ -35,14 +35,15 @@ public class NflFromEspn {
 	private static final String jsonRespFile = SystemUtils.getDirWork() + "\\nfl.scores.json";
 	
 	public static void main(String[] args) {
-		//downloadCurrentWeek();
+		NflFromEspn nfl = new NflFromEspn();
+		//nfl.downloadCurrentWeek();
 		
-		parseJson();
+		nfl.parseJson();
 		
 		logger.info("done");
 	}
-	
-	private static void downloadCurrentWeek() {
+
+	private void downloadCurrentWeek() {
 		try {
 			Response resp = HttpUtils.httpGet("http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
 			FileUtils.writeStringToFile(jsonRespFile, resp.getDetail(), false);
@@ -109,19 +110,16 @@ public class NflFromEspn {
 	 * 		}
 	 * 	]
 	 */
-	private static void parseJson() {
-		List<String> output = new ArrayList<>();
+	private void parseJson() {
+		List<Game> games = new ArrayList<>();
 		String jsonResp = FileUtils.getFileContents(jsonRespFile);
 		DocumentContext jsonContext = JsonPath.parse(jsonResp);
 		Integer week = jsonContext.read("week.number");
 		List<Object> events = jsonContext.read("events");
-		
-		output.add("Week: "+week);
-		output.add(events.size()+" games");
-		
+				
 		for (int x = 0; x < events.size(); x++) {
-			String game = jsonContext.read("events["+x+"].shortName");
-			output.add(game);
+			Game game = new Game();
+			game.title = jsonContext.read("events["+x+"].shortName");
 			List<Object> competitions = jsonContext.read("events["+x+"].competitions");
 			for (int y = 0; y < competitions.size(); y++) {
 				List<String> broadcasts = jsonContext.read("events["+x+"].competitions["+y+"].broadcasts[0].names");
@@ -132,53 +130,107 @@ public class NflFromEspn {
 					}
 					broadcastOn += name;
 				}
+				game.broadcasts = broadcastOn;
 				
-				String timeLeft = jsonContext.read("events["+x+"].competitions["+y+"].status.type.shortDetail");
+				game.status = jsonContext.read("events["+x+"].competitions["+y+"].status.type.shortDetail");
 				String gameDate = jsonContext.read("events["+x+"].competitions["+y+"].date");
 				Calendar gmt = Convert.toCalendar(gameDate);
-				Calendar local = DateTimeUtils.gmtToLocal(gmt);
-				output.add("  "+Format.date(Format.DATE_HUMAN, local)+" on "+broadcastOn+"       "+timeLeft);
+				game.dateTime = DateTimeUtils.gmtToLocal(gmt);
+				//output.add("  "+Format.date(Format.DATE_HUMAN, local)+" on "+broadcastOn+"       "+timeLeft);
 				
 				List<Object> competitors = jsonContext.read("events["+x+"].competitions["+y+"].competitors");
 				for (int z = 0; z < competitors.size(); z++) {
-					String team = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].team.abbreviation");
+					Team team = new Team();
+					team.title = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].team.abbreviation");
+					
 					String homeAway = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].homeAway");
 					String score = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].score");
 					
 					List<Object> records = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].records");
-					String recordOverall = "";
-					String recordLocation = "";
-					String location = "";
 					for (int r = 0; r < records.size(); r++) {
 						String type = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].records["+r+"].type");
 						String summary = jsonContext.read("events["+x+"].competitions["+y+"].competitors["+z+"].records["+r+"].summary");
 						if (type.equalsIgnoreCase("total")) {
-							recordOverall = summary+" ("+getWinPct(summary)+")";
+							team.overallRecord = summary;
 						} else if (type.equalsIgnoreCase("home") && homeAway.equalsIgnoreCase("home")) {
-							recordLocation = summary+" ("+getWinPct(summary)+")";
-							location = "at home";
+							team.homeRecord = summary;
 						} else if (type.equalsIgnoreCase("road") && homeAway.equalsIgnoreCase("away")) {
-							recordLocation = summary+" ("+getWinPct(summary)+")";
-							location = "on the road";
+							team.awayRecord = summary;
 						}
 					}
-					String formattedTeamScore = Format.pad("    "+team+": "+score, 22, " ", true);
-					output.add(formattedTeamScore+recordOverall+" overall, "+recordLocation+" "+location);
+					
+					if (homeAway.equalsIgnoreCase("home")) {
+						game.homeTeam = team;
+						game.homeTeamScore = Convert.toInt(score, false);
+					} else {
+						game.awayTeam = team;
+						game.awayTeamScore = Convert.toInt(score, false);
+					}
 				}
 			}
+			games.add(game);
 		}
 		
-		for (String line : output) {
-			System.out.println(line);
+		System.out.println("Week: "+week);
+		System.out.println(games.size()+" games");
+		for (Game game : games) {
+			game.print();;
 		}
 	}
 	
-	private static String getWinPct(String record) {
-		String[] wl = record.split("-");
-		double w = Convert.toDouble(wl[0]);
-		double l = Convert.toDouble(wl[1]);
-		double total = w + l;
-		double pct = (w / total) * 100;
-		return Format.number(pct, 0)+"%";
+	class Game {
+		String title;
+		Calendar dateTime;
+		String broadcasts;
+		String status;
+		Team homeTeam;
+		Integer homeTeamScore;
+		Team awayTeam;
+		Integer awayTeamScore;
+		
+		void print() {
+			System.out.println(title);
+			System.out.println("  "+Format.date(Format.DATE_HUMAN, dateTime)+" on "+broadcasts+"       "+status);
+			
+			String winInd = "";
+			if (status.equals("Final") && (awayTeamScore > homeTeamScore)) {
+				winInd = "(W)";
+			}
+			String formattedTeamScore = Format.pad("    "+awayTeam.title+": "+awayTeamScore+"  "+winInd, 22, " ", true);
+			System.out.println(formattedTeamScore+awayTeam.overallRecord+" ("+awayTeam.getOverallWinPct()+"%) overall, "+awayTeam.awayRecord+" ("+awayTeam.getAwayWinPct()+"%) on the road");
+			
+			winInd = "";
+			if (status.equals("Final") && (awayTeamScore < homeTeamScore)) {
+				winInd = "(W)";
+			}
+			formattedTeamScore = Format.pad("    "+homeTeam.title+": "+homeTeamScore+"  "+winInd, 22, " ", true);
+			System.out.println(formattedTeamScore+homeTeam.overallRecord+" ("+homeTeam.getOverallWinPct()+"%) overall, "+homeTeam.homeRecord+" ("+homeTeam.getHomeWinPct()+"%) at home");
+		}
+	}
+	
+	class Team {
+		String title;
+		String overallRecord;
+		String homeRecord;
+		String awayRecord;
+		
+		String getOverallWinPct() {
+			return getWinPct(overallRecord);
+		}
+		String getHomeWinPct() {
+			return getWinPct(homeRecord);
+		}
+		String getAwayWinPct() {
+			return getWinPct(awayRecord);
+		}
+		
+		private String getWinPct(String record) {
+			String[] wl = record.split("-");
+			double w = Convert.toDouble(wl[0]);
+			double l = Convert.toDouble(wl[1]);
+			double total = w + l;
+			double pct = (w / total) * 100;
+			return Format.number(pct, 0);
+		}
 	}
 }
