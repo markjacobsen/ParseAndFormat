@@ -254,6 +254,21 @@ public class NflFromEspn {
 				locDiff = awayTeam.getAwayWinPct() - homeTeam.getHomeWinPct();
 			}
 			System.out.println("      "+favor+" "+overallDiff+"% overall, "+locDiff+"% loc");
+			if ((homeTeamScore > 0) || (awayTeamScore > 0)) {
+				String leader = homeTeam.title;
+				String leaderStatus = "up by";
+				int leaderDiff = homeTeamScore - awayTeamScore;
+				if (homeTeamScore == awayTeamScore) {
+					leader = "Tied";
+				} else if (awayTeamScore > homeTeamScore) {
+					leader = awayTeam.title;
+					leaderDiff = awayTeamScore - homeTeamScore;
+				}
+				if (status.equals("Final")) {
+					leaderStatus = "win by";
+				}
+				System.out.println("      "+leader+" "+leaderStatus+" "+leaderDiff);
+			}
 		}
 	}
 	
