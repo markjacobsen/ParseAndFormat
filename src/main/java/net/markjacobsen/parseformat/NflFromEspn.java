@@ -210,15 +210,23 @@ public class NflFromEspn {
 			System.out.println("  "+Format.date(Format.DATE_HUMAN, dateTime)+" on "+broadcasts+"       "+status);
 			
 			String winInd = "";
-			if (status.equals("Final") && (awayTeamScore > homeTeamScore)) {
-				winInd = "(W)";
+			if (awayTeamScore > homeTeamScore) {
+				if (status.equals("Final")) {
+					winInd = "(W)";
+				} else {
+					winInd = "(Lead)";
+				}
 			}
 			String formattedTeamScore = Format.pad("    "+awayTeam.title+": "+awayTeamScore+"  "+winInd, 22, " ", true);
 			System.out.println(formattedTeamScore+awayTeam.overallRecord+" ("+awayTeam.getOverallWinPct()+"%) overall, "+awayTeam.awayRecord+" ("+awayTeam.getAwayWinPct()+"%) on the road");
 			
 			winInd = "";
-			if (status.equals("Final") && (awayTeamScore < homeTeamScore)) {
-				winInd = "(W)";
+			if (awayTeamScore < homeTeamScore) {
+				if (status.equals("Final")) {
+					winInd = "(W)";
+				} else {
+					winInd = "(Lead)";
+				}
 			}
 			formattedTeamScore = Format.pad("    "+homeTeam.title+": "+homeTeamScore+"  "+winInd, 22, " ", true);
 			System.out.println(formattedTeamScore+homeTeam.overallRecord+" ("+homeTeam.getOverallWinPct()+"%) overall, "+homeTeam.homeRecord+" ("+homeTeam.getHomeWinPct()+"%) at home");
