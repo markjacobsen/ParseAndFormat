@@ -36,7 +36,7 @@ public class NflFromEspn {
 	
 	public static void main(String[] args) {
 		NflFromEspn nfl = new NflFromEspn();
-		//nfl.downloadCurrentWeek();
+		nfl.downloadCurrentWeek();
 		
 		nfl.parseJson();
 		
