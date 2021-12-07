@@ -2,7 +2,9 @@ package net.markjacobsen.parseformat;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -171,9 +173,17 @@ public class NflFromEspn {
 			games.add(game);
 		}
 		
+		Comparator<Game> compareator = Comparator
+						                .comparing(Game::getDateTimeCompareVal)
+						                .thenComparing(Game::getTitleCompareVal);
+		
+		List<Game> sortedGames = games.stream()
+						                .sorted(compareator)
+						                .collect(Collectors.toList());
+		
 		System.out.println("Week: "+week);
 		System.out.println(games.size()+" games");
-		for (Game game : games) {
+		for (Game game : sortedGames) {
 			game.print();;
 		}
 	}
@@ -187,6 +197,13 @@ public class NflFromEspn {
 		Integer homeTeamScore;
 		Team awayTeam;
 		Integer awayTeamScore;
+		
+		String getTitleCompareVal() {
+			return title;
+		}
+		String getDateTimeCompareVal() {
+			return Format.date(Format.DATE_DB2_TIMESTAMP, dateTime);
+		}
 		
 		void print() {
 			System.out.println(title);
