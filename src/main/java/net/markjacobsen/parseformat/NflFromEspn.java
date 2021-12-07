@@ -230,6 +230,30 @@ public class NflFromEspn {
 			}
 			formattedTeamScore = Format.pad("    "+homeTeam.title+": "+homeTeamScore+"  "+winInd, 22, " ", true);
 			System.out.println(formattedTeamScore+homeTeam.overallRecord+" ("+homeTeam.getOverallWinPct()+"%) overall, "+homeTeam.homeRecord+" ("+homeTeam.getHomeWinPct()+"%) at home");
+			
+			String favor = "";
+			int overallDiff = 0;
+			int locDiff = 0;
+			if (homeTeam.getOverallWinPct() == awayTeam.getOverallWinPct()) {
+				if (homeTeam.getHomeWinPct() >= awayTeam.getAwayWinPct()) {
+					favor = homeTeam.title;
+					overallDiff = 0;
+					locDiff = homeTeam.getHomeWinPct() - awayTeam.getAwayWinPct();
+				} else {
+					favor = awayTeam.title;
+					overallDiff = 0;
+					locDiff = awayTeam.getAwayWinPct() - homeTeam.getHomeWinPct();
+				}
+			} else if (homeTeam.getOverallWinPct() >= awayTeam.getOverallWinPct()) {
+				favor = homeTeam.title;
+				overallDiff = homeTeam.getOverallWinPct() - awayTeam.getOverallWinPct();
+				locDiff = homeTeam.getHomeWinPct() - awayTeam.getAwayWinPct();
+			} else {
+				favor = awayTeam.title;
+				overallDiff = awayTeam.getOverallWinPct() - homeTeam.getOverallWinPct();
+				locDiff = awayTeam.getAwayWinPct() - homeTeam.getHomeWinPct();
+			}
+			System.out.println("      "+favor+" "+overallDiff+"% overall, "+locDiff+"% loc");
 		}
 	}
 	
@@ -239,23 +263,23 @@ public class NflFromEspn {
 		String homeRecord;
 		String awayRecord;
 		
-		String getOverallWinPct() {
+		int getOverallWinPct() {
 			return getWinPct(overallRecord);
 		}
-		String getHomeWinPct() {
+		int getHomeWinPct() {
 			return getWinPct(homeRecord);
 		}
-		String getAwayWinPct() {
+		int getAwayWinPct() {
 			return getWinPct(awayRecord);
 		}
 		
-		private String getWinPct(String record) {
+		private int getWinPct(String record) {
 			String[] wl = record.split("-");
 			double w = Convert.toDouble(wl[0]);
 			double l = Convert.toDouble(wl[1]);
 			double total = w + l;
 			double pct = (w / total) * 100;
-			return Format.number(pct, 0);
+			return Convert.toInt(Format.number(pct, 0), false);
 		}
 	}
 }
